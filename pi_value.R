@@ -57,7 +57,9 @@ area_simpson = function(b=1){
   
 }
 
-
+print(4*area_trapezoidal(b=1))
+print(4*area_midpt(b=1))
+print(4*area_simpson(b=1))
 
 
 

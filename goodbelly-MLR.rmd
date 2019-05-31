@@ -1,0 +1,277 @@
+---
+title: "Technical Report"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+Data analytics is the advance branch of mathematics and computer science, which aims at finding the pattern in data. With the present case of the Boodbelly, we need to look at their collected dataset and find out the patterns which suggests that the demo and endcap activites are important to the companies sales performance. Company is spending a huge amount of money on demo, endcaps and salespoerson to achieve it targets and it's completely justifiable by the management to ask for the ROI (Return over Investment). Hence, in this report we are trying to cover the analytics part of the Goodbelly product and will try to see whether the marketing manager is spending on the correct things or not.
+
+Various data analytics techniques can be employed to do that, but sicne we need to find the factors which are really driving the sales growth of the company. We will use the Linear Regression method to do that. With this we will try to understand which all attributes are affecting the sales of the product and how we can.
+
+# Data Preparation and Data Cleaning
+
+First we need to import the data in the R environment and check the integrity.
+For this we will use the library "readxl". Below is the code and the result of the data preparation steps -
+
+```{r, echo=TRUE}
+
+# Reading data in R environmrnt
+
+library(readr)
+path = "D:/Extra/R/PID004/PID004/Input/Goodbelly case dataset.csv"
+
+Goodbelly_case_dataset <- read_csv(path, col_types = cols(Date = col_date(format = "%m/%d/%Y")))
+
+```
+Now since we have imported the data, we need to check the integrity of the dataset and verify the structure. Below is the results of the same
+```{r, echo=TRUE}
+# Checking structure
+str(Goodbelly_case_dataset)
+```
+We can change the region and store as factor. Below is the code and the generated result. This will help us in producing better visualizations.
+
+```{r, echo=TRUE}
+Goodbelly_case_dataset$Region = as.factor(Goodbelly_case_dataset$Region)
+Goodbelly_case_dataset$Store = as.factor(Goodbelly_case_dataset$Store)
+
+# Check the structure again
+str(Goodbelly_case_dataset)
+```
+
+## Descriptive statistics and Missing Value check
+The data is now used to see the descriptive statistics and the missing value. This can be done using the summary of the dataset. Below is the result for the same.
+
+```{r, echo=TRUE}
+summary(Goodbelly_case_dataset)
+```
+We can see one NS value in each of the column, this is because of the of the parsing of the values in the R environment is taking one more rows that the total populated values. We can simply remove this and then our dataset will be perfectly fine to use.
+
+```{r}
+# Removing NA value
+Goodbelly_case_dataset = na.omit(Goodbelly_case_dataset)
+```
+# Data Visualization
+Data visualization is great technique to see what's the underlying trend present in the data. It help us to figure our the correlations, distributin and outliers.
+In this part we are trying to see the factors which are correlated, check their distribution and their effect on the sales of the Goodbelly product.
+
+```{r}
+library(ggplot2)
+visual.data = Goodbelly_case_dataset
+visual.data$Sales_Rep = as.factor(visual.data$Sales_Rep)
+visual.data$Endcap = as.factor(visual.data$Endcap)
+visual.data$Demo = as.factor(visual.data$Demo)
+visual.data$Demo1.3 = as.factor(visual.data$Demo1.3)
+visual.data$Demo4.5 = as.factor(visual.data$Demo4.5)
+
+ggplot(data = visual.data) +
+  aes(x = Region, fill = Sales_Rep, weight = Sales) +
+  geom_bar() +
+  labs(title = "Region wise Sales distribution",
+    subtitle = "With Sales Representative") +
+  theme_minimal()
+
+
+```
+
+```{r}
+ggplot(data = visual.data) +
+  aes(x = Region, y = Sales, fill = Endcap) +
+  geom_boxplot() +
+  labs(title = "Region wise Sales distribution",
+    subtitle = "With Endcap") +
+  theme_minimal()
+
+```
+ The teo plots above shows that the regions which have sales representative and the Endcap are definetly showing higher sales. We can see from the boxplot that the distribution and the average value of the sales in these regions are high compared to when they don't have Endcaps.
+
+```{r}
+ggplot(data = visual.data) +
+  aes(x = Region, y = Sales, fill = Demo) +
+  geom_boxplot() +
+  labs(title = "Region wise Sales distribution",
+    subtitle = "With Demo") +
+  theme_minimal()
+```
+In the above graph we can clearly see that the Product sale is higher in all placed if we have Demo there. So with demo the sales are always above 250 and the average sales at all the location are higher in compare to the sales without demo.
+
+```{r, echo=TRUE}
+ggplot(data = visual.data) +
+  aes(x = Region, y = Sales, fill = Demo1.3) +
+  geom_boxplot() +
+  labs(title = "Region wise Sales distribution",
+    subtitle = "With Demo1.3") +
+  theme_minimal()
+```
+When we see the above graoh we can see thatn Demo1.3 is not so effecttive in pulling up the sales. We can see that at majority of the places the sales are marginally high because of dem01.4 and at some places like "SW" it's even lower.
+
+```{r, echo=TRUE}
+ggplot(data = visual.data) +
+  aes(x = Region, y = Sales, fill = Demo4.5) +
+  geom_boxplot() +
+  labs(title = "Region wise Sales distribution",
+    subtitle = "With Demo1.5") +
+  theme_minimal()
+```
+Demo1.5 is also showing marginally better results. And at location "SP" it's average is lower than the without Demo4.5 sales. There are few outlier's but that can be seen as the differed cases and ignored here.
+
+As we saw the sales with the location, it's time to examine the sales with the dates. below are the graph used for the same.
+
+```{r, echo=TRUE}
+
+ggplot(data = visual.data) +
+  aes(x = Date, y = Sales, color = Sales_Rep) +
+  geom_line() +
+  labs(title = "Date wise Sales distribution",
+    subtitle = "WithSales Rep") +
+  theme_minimal()
+```
+
+From the above graph we can see that, when a sales representative was used the sales in Jan to Oct have shown bettern performance than without representatives.
+
+```{r, echo=TRUE}
+ggplot(data = visual.data) +
+  aes(x = Date, y = Sales, color = Endcap) +
+  geom_line() +
+  labs(title = "Date wise Sales distribution",
+    subtitle = "With Endcap") +
+  theme_minimal()
+```
+For the endcap, we can see that the from Jan to Apr it showed poor performance and mixed performance between Apr and JUl, but hten it showed better performance in the Oct.
+
+```{r, echo=TRUE}
+ggplot(data = visual.data) +
+  aes(x = Date, y = Sales, color = Demo) +
+  geom_line() +
+  labs(title = "Date wise Sales distribution",
+    subtitle = "With Demo") +
+  theme_minimal()
+```
+
+Monthly performance of Demo from Jan to Oct always remained higher in comparison to without Demo.
+The above graph is showing this very clearly.
+
+```{r, echo=TRUE}
+
+ggplot(data = visual.data) +
+  aes(x = Date, y = Sales, color = Demo1.3) +
+  geom_line() +
+  labs(title = "Date wise Sales distribution",
+    subtitle = "With Demo1.3") +
+  theme_minimal()
+```
+Monthly performance of the Demo1.3 remained quite mixed. But looking again we can see that most of the time it remained above.
+
+```{r, echo=TRUE}
+ggplot(data = visual.data) +
+  aes(x = Date, y = Sales, color = Demo4.5) +
+  geom_line() +
+  labs(title = "Date wise Sales distribution",
+    subtitle = "With Demo1.5") +
+  theme_minimal()
+```
+
+The performance of Demo4.5 is fluctuating and keep going up and down over the period from Jan and Oct. But most of the time it performed marginally better.
+
+Correlation is also an important factor when we look it into the context of linear regression. Below is the correlation plot whcih shows whcih all numeric variables are correlated and to which extent.
+
+```{r, echo=TRUE}
+# Correlation and correlation plot
+library(corrplot)
+cor.data = cor(Goodbelly_case_dataset[4:12])
+corrplot(cor.data, tl.cex = 1,type="lower") # This plots correlation calculated
+
+```
+
+#Modelling
+Now as we haev seen the descriptive statisitics and visualization of the plot. We can move ahead with the modelling part. Data visualization has shown us some interesting features of attribtues. We came to know that Endcap and Demo are performing well in most of the cases. They are somewhere dependent on the location and also in some cases on months. But still in majority of the cases Demo and Endcaps ahve shows to pull up the sales.
+
+Now we need to model the sales using these numerical variable so as to see by what factor these attribtues are afffecting the sales.
+Here we are using the multiple linear regression method to find the best fitting model for this work.
+
+We will start with all the numerical variables first and then reduce the 2 variables in each step, at last we will use the selection methods for the attribute selection to find the best model
+
+```{r, echo=TRUE}
+data.model = Goodbelly_case_dataset[4:12]
+# To create a sales price, we need to multiply sales and ARP
+data.model$Sales1 <- data.model$Sales * data.model$ARP
+model1 = lm(Sales1 ~ Sales_Rep +Endcap+Demo+Demo1.3+Demo4.5+Natural+ Fitness, data=data.model)
+summary(model1)
+
+```
+The first model shows that nto all the variables are statistically important. That's evident from the p-value and the stars in the next column (which is basically coding for the p-values). R-squared value is 51.57%, which means nearly 52% of the variance is covered by this simple linear model.
+
+```{r, echo=TRUE}
+model2 = lm(Sales1 ~ Sales_Rep+ Endcap+ Demo+ Demo1.3 + Demo4.5, data=data.model)
+summary(model2)
+
+```
+
+This model also has the similar performance, if we look at the R-squared value.
+
+```{r, echo=TRUE}
+model3 = lm(Sales1 ~ ARP + Sales_Rep+ Endcap+ Demo, data=data.model)
+summary(model3)
+
+```
+Model3 is better performing with respect to model1 and model2. We see that the R-squared value is 53.63%.Also, this model has all the attributes which are statistically highly significant. This could be a good candidate for the final model selction.
+
+```{r, echo=TRUE}
+model4 = lm(Sales1 ~ ARP + Sales_Rep, data=data.model)
+summary(model4)
+
+```
+Model4 has depricated it's performance, as we can see that although the attributes are statistically significant, the R-squared value of the fitted model is very low. Hence, it can't be a candidate for the final model selection.
+
+#Model Selection
+For the final model selection, we will use th "MASS" library and use the step AIC method to select the best attributes for the model. Then we wil compare the final selected model using the step AIC with our other above models.
+The final slection criteria will be dependent on the R-Squared value and the AIC value.
+
+```{r, echo=TRUE}
+# Using the model selection method as AIC as the criteria
+library(MASS)
+model5 = lm(Sales1 ~ Sales_Rep +Endcap+Demo+Demo1.3+Demo4.5+Natural+ Fitness, data=data.model)
+stepAIC(model5, direction = "both")
+
+```
+
+We can see that the selected model using the step AIC is having the following equation  Sales1 ~ Sales_Rep + Endcap + Demo + Demo4.5 + Fitness. Let's try to fit this model and see the summary -
+
+```{r, echo=TRUE}
+model6 = lm( Sales1 ~ Sales_Rep + Endcap + Demo + Demo4.5 + Fitness, data = data.model)
+summary(model6)
+print(paste('AIC of the model6 is', AIC(model6)))
+print(paste('AIC of the model1 is', AIC(model1)))
+```
+
+If we see the model 1 and compare it with model6, we can see that model1 is just marginally better in terms of R-squared value but it's marginally infirior when compared with AIC. We can also see that model 6 has an attribute Fitness which is not so significant in this moel. Let's try to remove this and see the performance of the model.
+
+```{r, echo=TRUE}
+model7 = lm(Sales1 ~ Sales_Rep + Endcap + Demo + Demo4.5 , data = data.model)
+summary(model7)
+print(paste('AIC of the model7 is', AIC(model7)))
+```
+
+model 7 has almost similar R-squared value and the AIC is almost same.
+
+Hence, for this given and data and for simple Linear Regression modelling, we are choosing model7 as our final model.
+This is also keeping in mind that the we want our model to have all the statistically significant variables. Else, our model will suffer from the correlated and inflated vlaues.
+
+# Discussion of the Model and Result
+
+As now we have selected our model, we need to check the claim of the marketing manager that how Endcaps and Demos are helping them to pull up the sales. This can be done by looking at the coefficients of the model and then plotting the residual plots and doing the model diagonostics. Below are the the significance of the model coefficients.
+
+keeping our discussion confined with the issues realte to the marketing manager, we can see that the attributes Sales_Rep, Endcap, Demo, Demo4.5 are having positive coefficients. It means that these facotrs are really driving the growth of the sales. Hence,marketing manager is correct if he is seeking funds for his plans. We cans see that the attribute Fitness is having negative coeeficient, which means this facor is bringing down the real sales of the product.
+
+Let's analyze the final selected model using the residual plot and disgonistics
+
+```{r, echo=TRUE}
+plot(model7)
+
+```
+
+From the residual vs fitted we can see that the fitted values is quite good. Although there are some outliers which are trying to move the values. The norm plots slow that the data is quite normal but few outlier are pulling it out from the normality. Hence, these outlier are resposible for the skewedness.The scale ocation also showed the same thing, the fitted line is perfect and manages to shows the more than average variance, just few outlier are causing the deviations.we can see from the cooks distance that all of the outlier are noninfluential to the results. As all the datapoints are inside the cook's boundary, we cann't even see the cook's boundary. Hence, the generated model is fine. 
+
